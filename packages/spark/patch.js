@@ -62,11 +62,22 @@ Spark._patch = function(tgtParent, srcParent, tgtBefore, tgtAfter, preservations
             // match succeeded
             lastTgtMatch = tgt;
             if (tgt.firstChild || src.firstChild) {
-              // Don't patch contents of TEXTAREA tag,
-              // which are only the initial contents but
-              // may affect the tag's .value in IE.
-              if (tgt.nodeName !== "TEXTAREA") {
-                // recurse!
+              if (tgt.nodeName === "SELECT") {
+                // For SELECT nodes, we've already made a careful choice (in
+                // _copyAttributes) for the SELECT's value. We want to copy over
+                // the descendents of the tag (eg, OPTIONs, OPTGROUPs, etc) so
+                // that we get the new version's OPTIONs... but adding an
+                // <OPTION SELECTED> to the <SELECT> will change its value! So
+                // we need to save the chosen value before we copy over the
+                // OPTIONs and restore it afterwards. We don't look for any more
+                // nested preserved regions inside the element.
+                var savedSelectValue = tgt.value;
+                patcher._replaceNodes(null, null, null, null, tgt, src);
+                tgt.value = savedSelectValue;
+              } else if (tgt.nodeName !== "TEXTAREA") {
+                // Don't patch contents of TEXTAREA tag, which are only the
+                // initial contents but may affect the tag's .value in IE.
+                // Otherwise recurse!
                 Spark._patch(tgt, src, null, null, preservations);
               }
             }

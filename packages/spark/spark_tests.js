@@ -2712,7 +2712,8 @@ Tinytest.add("spark - controls - radio", function(test) {
   div.kill();
 });
 
-_.each(['textarea', 'text', 'password', 'submit', 'button', 'reset'], function (type) {
+_.each(['textarea', 'text', 'password', 'submit', 'button',
+        'reset', 'select'], function (type) {
   Tinytest.add("spark - controls - " + type, function(test) {
     var R = ReactiveVar({x:"test"});
     var R2 = ReactiveVar("");
@@ -2721,6 +2722,14 @@ _.each(['textarea', 'text', 'password', 'submit', 'button', 'reset'], function (
       R2.get();
       if (type === 'textarea') {
         return '<textarea id="someId">This is a ' + R.get().x + '</textarea>';
+      } else if (type === 'select') {
+        var options = ['This is a test', 'This is a fridge',
+                       'This is a frog', 'foobar', 'This is a photograph',
+                       'This is a monkey', 'This is a donkey'];
+        return '<select id="someId">' + _.map(options, function (o) {
+          var maybeSel = ('This is a ' + R.get().x) === o ? 'selected' : '';
+          return '<option ' + maybeSel + '>' + o + '</option>';
+        }).join('') + '</select>';
       } else {
         return '<input type="' + type + '" id="someId" value="This is a ' +
           R.get().x + '">';
@@ -2729,8 +2738,8 @@ _.each(['textarea', 'text', 'password', 'submit', 'button', 'reset'], function (
     div.show(true);
 
     var input = div.node().firstChild;
-    if (type === 'textarea') {
-      test.equal(input.nodeName, 'TEXTAREA');
+    if (type === 'textarea' || type === 'select') {
+      test.equal(input.nodeName, type.toUpperCase());
     } else {
       test.equal(input.nodeName, 'INPUT');
       test.equal(input.type, type);
@@ -2762,8 +2771,8 @@ _.each(['textarea', 'text', 'password', 'submit', 'button', 'reset'], function (
     test.equal(input._sparkOriginalRenderedValue, [input.value]);
 
     // Setting a value (similar to user typing) should prevent value from being
-    // reverted if the div is re-rendered but the rendered TEXTAREA value (ie,
-    // R) does not change.
+    // reverted if the div is re-rendered but the rendered value (ie, R) does
+    // not change.
     input.value = "foobar";
     R2.set("change");
     Meteor.flush();
