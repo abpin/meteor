@@ -2713,7 +2713,7 @@ Tinytest.add("spark - controls - radio", function(test) {
 });
 
 _.each(['textarea', 'text', 'password', 'submit', 'button',
-        'reset', 'select'], function (type) {
+        'reset', 'select', 'hidden'], function (type) {
   Tinytest.add("spark - controls - " + type, function(test) {
     var R = ReactiveVar({x:"test"});
     var R2 = ReactiveVar("");
@@ -2736,6 +2736,7 @@ _.each(['textarea', 'text', 'password', 'submit', 'button',
       }
     }));
     div.show(true);
+    var canFocus = (type !== 'hidden');
 
     var input = div.node().firstChild;
     if (type === 'textarea' || type === 'select') {
@@ -2753,18 +2754,20 @@ _.each(['textarea', 'text', 'password', 'submit', 'button',
     test.equal(input.value, "This is a fridge");
     test.equal(input._sparkOriginalRenderedValue, [input.value]);
 
-    // ...unless focused
-    focusElement(input);
-    R.set({x:"frog"});
-    Meteor.flush();
-    test.equal(input.value, "This is a fridge");
-    test.equal(input._sparkOriginalRenderedValue, [input.value]);
+    if (canFocus) {
+      // ...unless focused
+      focusElement(input);
+      R.set({x:"frog"});
+      Meteor.flush();
+      test.equal(input.value, "This is a fridge");
+      test.equal(input._sparkOriginalRenderedValue, [input.value]);
 
-    // blurring and re-setting works
-    blurElement(input);
-    Meteor.flush();
-    test.equal(input.value, "This is a fridge");
-    test.equal(input._sparkOriginalRenderedValue, [input.value]);
+      // blurring and re-setting works
+      blurElement(input);
+      Meteor.flush();
+      test.equal(input.value, "This is a fridge");
+      test.equal(input._sparkOriginalRenderedValue, [input.value]);
+    }
     R.set({x:"frog"});
     Meteor.flush();
     test.equal(input.value, "This is a frog");
@@ -2795,16 +2798,18 @@ _.each(['textarea', 'text', 'password', 'submit', 'button',
     test.equal(input.value, "This is a monkey");
     test.equal(input._sparkOriginalRenderedValue, ["This is a monkey"]);
 
-    // The same as the previous test... except make sure that it still works if
-    // the input is focused. ie, imagine that the user edited the field and hit
-    // enter with the field still focused, updating the database to match the
-    // field and keeping the field focused.
-    input.value = "This is a donkey";
-    focusElement(input);
-    R.set({x:"donkey"});
-    Meteor.flush();
-    test.equal(input.value, "This is a donkey");
-    test.equal(input._sparkOriginalRenderedValue, ["This is a donkey"]);
+    if (canFocus) {
+      // The same as the previous test... except make sure that it still works
+      // if the input is focused. ie, imagine that the user edited the field and
+      // hit enter with the field still focused, updating the database to match
+      // the field and keeping the field focused.
+      input.value = "This is a donkey";
+      focusElement(input);
+      R.set({x:"donkey"});
+      Meteor.flush();
+      test.equal(input.value, "This is a donkey");
+      test.equal(input._sparkOriginalRenderedValue, ["This is a donkey"]);
+    }
 
     div.kill();
   });
